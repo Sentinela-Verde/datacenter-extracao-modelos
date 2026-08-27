@@ -1,0 +1,11 @@
+earthengine-api==1.7.40
+geemap==0.38.3
+geopandas==1.1.4
+matplotlib==3.11.1
+numpy==2.5.2
+osmnx==2.1.1
+pandas==3.0.5
+python-dotenv==1.2.3
+rasterio==1.5.1
+scikit-learn==1.9.0
+tensorflow==2.21.0
