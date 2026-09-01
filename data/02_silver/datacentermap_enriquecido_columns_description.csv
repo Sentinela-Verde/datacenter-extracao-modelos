@@ -1,0 +1,74 @@
+﻿nome_coluna;descricao_coluna;data_type;amostra_dados
+id_datacenter;Identificador único do data center, gerado na etapa de scraping do DataCenterMap.;texto;dc_166467565d
+nome_datacenter;Nome comercial do data center / facility.;texto;Scala AI City
+operadora;Empresa operadora/proprietária do data center.;texto;Scala Data Centers
+endereco;Endereço (logradouro) do data center.;texto;Rodovia Osvaldo Aranha
+cep;Código postal (CEP) do endereço.;texto;92990-000
+cidade;Cidade onde o data center está localizado.;texto;Eldorado do Sul
+estado;Atenção: contém o valor que na tabela original (datacenters_detalhado.csv) era a coluna 'mercado' (região/mercado comercial, ex. 'Porto Alegre', 'Sao Paulo'). A coluna 'estado' (UF) original não está presente neste arquivo.;texto;Porto Alegre
+pais;País onde o data center está localizado.;texto;Brazil
+latitude;Latitude geográfica, em graus decimais.;numérico (decimal);-30.07425077314578
+longitude;Longitude geográfica, em graus decimais.;numérico (decimal);-51.49400150419427
+status;Código de status do anúncio no DataCenterMap (ex.: 1 = ativo).;numérico (inteiro);1
+stage;Código do estágio da obra/operação (ex.: 0 = planejado, 1 = em construção, 2 = operacional).;numérico (inteiro);0
+tipo_listagem;Tipo de listagem no DataCenterMap (ex.: 'Campus', 'Facility').;texto;Campus
+tipo_capacidade;Tipo de capacidade oferecida (ex.: 'Colocation').;texto;Colocation
+tags;Tags/selos descritivos do site (ex.: 'Carrier Neutral', 'Hyperscale-Ready').;texto;Carrier Neutral
+link_datacenter;URL da página do data center no site DataCenterMap.;texto;https://www.datacentermap.com/brazil/porto-alegre/scala-ai-city/
+mw_construido;Capacidade de energia construída/em operação, em megawatts (MW).;numérico (decimal);13.0
+mw_referenciado;Capacidade de energia referenciada (total planejado/anunciado), em MW.;numérico (decimal);13.0
+whitespace_construido_sqm;Área de whitespace (piso técnico) construída, em pés quadrados.;numérico (decimal);8993.0
+whitespace_referenciado_sqm;Área de whitespace referenciada/planejada, em pés quadrados.;numérico (decimal);8993.0
+ano_operacional;Ano em que o site entrou (ou deve entrar) em operação.;numérico (decimal);2019.0
+tipo_construcao;Tipo de construção do prédio (ex.: 'Purpose-built', 'Retrofitted').;texto;Purpose-built
+tipo_ocupacao;Regime de ocupação do site (ex.: 'Sole-tenant').;texto;Sole-tenant
+carga_piso_max_kg_sqm;Carga máxima suportada pelo piso, em kg/m².;numérico (decimal);1.526
+redundancia_refrigeracao;Nível de redundância do sistema de refrigeração (ex.: 'N+1', 'N+2').;texto;N+2
+cctv;Indicador (0/1) de presença de CFTV/CCTV.;numérico (decimal);1.0
+controle_acesso_cartao;Indicador (0/1) de controle de acesso por cartão.;numérico (decimal);1.0
+biometria;Indicador (0/1) de controle de acesso biométrico.;numérico (decimal);1.0
+tier_projetado;Nível de Tier (Uptime Institute) projetado para o site.;numérico (decimal);3.0
+tier_certificado;Nível de Tier certificado oficialmente para o site.;numérico (decimal);0.0
+pci_dss;"Indicador de certificação PCI-DSS (valores observados: 0/1/2/3; semântica exata dos códigos 2 e 3 não documentada na fonte).";numérico (decimal);1.0
+iso9001;Indicador de certificação ISO 9001 (mesma observação de códigos acima).;numérico (decimal);1.0
+iso14001;Indicador de certificação ISO 14001 (gestão ambiental).;numérico (decimal);1.0
+iso22301;Indicador de certificação ISO 22301 (continuidade de negócios).;numérico (decimal);1.0
+iso27001;Indicador de certificação ISO 27001 (segurança da informação).;numérico (decimal);1.0
+iso45001;Indicador de certificação ISO 45001 (saúde e segurança ocupacional).;numérico (decimal);1.0
+iso50001;Indicador de certificação ISO 50001 (gestão de energia).;numérico (decimal);1.0
+soc1;Indicador de certificação/relatório SOC 1.;numérico (decimal);2.0
+soc2;Indicador de certificação/relatório SOC 2.;numérico (decimal);2.0
+soc3;Indicador de certificação/relatório SOC 3.;numérico (decimal);2.0
+colo_suites;Indicador (0/1) de disponibilidade de suítes privativas de colocation.;numérico (decimal);1.0
+colo_cages;Indicador (0/1) de disponibilidade de gaiolas (cages) de colocation.;numérico (decimal);1.0
+colo_cabinets;Indicador (0/1) de disponibilidade de racks/cabinets de colocation.;numérico (decimal);1.0
+colo_partial_cabinets;Indicador (0/1) de disponibilidade de racks parciais (fração de rack).;numérico (decimal);1.0
+colo_shared_rackspace;Indicador (0/1) de disponibilidade de espaço de rack compartilhado.;numérico (decimal);0.0
+colo_footprints;Indicador (0/1) de disponibilidade de footprints (áreas dedicadas) de colocation.;numérico (decimal);1.0
+colo_remote_hands;Indicador (0/1) de disponibilidade de serviço remote hands.;numérico (decimal);1.0
+colo_build_to_suit;Indicador (0/1) de disponibilidade de espaço sob medida (build-to-suit).;numérico (decimal);0.0
+cloud_gpu;Indicador (0/1) de disponibilidade de serviço de nuvem com GPU.;numérico (decimal);0.0
+cloud_managed;Indicador (0/1) de disponibilidade de serviço de nuvem gerenciada.;numérico (decimal);0.0
+cloud_baremetal;Indicador (0/1) de disponibilidade de serviço de bare metal.;numérico (decimal);0.0
+cloud_public_cloud;Indicador (0/1) de disponibilidade de conexão com provedores de nuvem pública.;numérico (decimal);0.0
+qtd_ixps;Quantidade de Internet Exchange Points (IXPs) presentes no site.;numérico (inteiro);0
+qtd_clouds;Quantidade de provedores de nuvem presentes no site.;numérico (inteiro);0
+qtd_redes_presentes;Quantidade de redes/operadoras (ASNs) presentes no site.;numérico (inteiro);0
+qtd_provedores_rede;Quantidade de provedores de conectividade/rede presentes.;numérico (inteiro);0
+qtd_provedores_servico;Quantidade de provedores de serviço presentes no site.;numérico (inteiro);0
+codigo_site;Código interno/sigla do site (ex.: 'JDI02').;texto;JDI02
+peeringdb_id;ID correspondente do site no PeeringDB, quando existente.;numérico (decimal);7583.0
+desc_resumo_pt;Resumo/tradução em português da coluna 'descricao' original (texto livre em inglês), gerado via LLM (Claude).;texto;O Scala AI City, localizado em Eldorado do Sul, região metropolitana de Porto Alegre, Brasil, é um projeto pioneiro de infraestrutura digital da Scala Data Centers. Com investim...
+desc_qualidade_texto;Classificação da especificidade do texto original, atribuída pela LLM (ex.: 'especifico_do_site', 'boilerplate_operadora').;texto;detalhado_especifico
+desc_pue_mencionado;Valor ou faixa de PUE (Power Usage Effectiveness) mencionado no texto original, extraído pela LLM.;texto;PUE não superior a 1,2
+desc_wue_ou_agua_mencionado;Informação sobre WUE (Water Usage Effectiveness) ou consumo de água mencionada no texto, extraída pela LLM.;texto;"WUE zero; uso zero de água para resfriamento"
+desc_energia_renovavel_pct;Percentual de energia renovável mencionado no texto, extraído pela LLM.;texto;100%
+desc_fonte_energia;Fonte de energia mencionada no texto (ex.: energia fotovoltaica, subestação própria), extraída pela LLM.;texto;Energia renovável
+desc_tecnologia_resfriamento;Tecnologia de resfriamento mencionada no texto (ex.: resfriamento líquido, a ar, circuito fechado), extraída pela LLM.;texto;"Resfriamento líquido, tecnologias avançadas de resfriamento sem uso de água; racks acima de 150 kW"
+desc_investimento_mencionado;Valor de investimento mencionado no texto original, extraído pela LLM.;texto;US$ 500 milhões na primeira fase
+desc_empregos_gerados;Número ou menção de empregos gerados citada no texto, extraída pela LLM.;texto;Mais de 3.000 na fase inicial
+desc_carga_alvo;Tipos de carga/workload-alvo mencionados no texto (ex.: IA, hyperscale, nuvem soberana), extraídos pela LLM.;texto (lista serializada como string Python — usar ast.literal_eval para converter, não é JSON válido);['IA / cargas de trabalho de inteligência artificial', 'Alta densidade (racks >150 kW)']
+desc_expansao_planejada_mw;Menção textual de expansão/escalabilidade de capacidade planejada, extraída pela LLM.;texto;900 MW em construção ou planejados (além de mais de 60 MW operacionais)
+desc_aprovacoes_regulatorias;Aprovações ou órgãos regulatórios mencionados no texto (ex.: ONS, CZPE), extraídos pela LLM.;texto (lista serializada como string Python — usar ast.literal_eval para converter, não é JSON válido);[]
+desc_iniciativas_ambientais;Iniciativas ambientais/sustentabilidade mencionadas no texto, extraídas pela LLM.;texto (lista serializada como string Python — usar ast.literal_eval para converter, não é JSON válido);['100% energia renovável', 'Uso zero de água no resfriamento', 'Alta eficiência energética (PUE ≤1,2)']
+desc_cronograma_texto;Menção textual de cronograma de construção/início de operação, extraída pela LLM.;texto;"Primeira fase com investimento inicial de US$ 500 milhões; conexão planejada ao cabo submarino Malbec"

@@ -74,17 +74,7 @@ def extract_datacenter_timeseries(
             .map(mask_s2_clouds)
         )
 
-        visualization = {
-            'min': 0.0,
-            'max': 0.3,
-            'bands': ['B4', 'B3', 'B2'],
-        }
-
-        m = geemap.Map()
-        m.set_center(lon, lat, 12)
-        m.add_layer(dataset.mean(), visualization, 'RGB')
-
-        # Cria um quadrado de ~5km ao redor do ponto central usado no mapa
+        # Cria um quadrado de ~5km ao redor do ponto central
         center_point = ee.Geometry.Point([lon, lat])
         region = center_point.buffer(buffer_m).bounds()
 
