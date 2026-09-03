@@ -12,6 +12,7 @@ Correções aplicadas em relação ao notebook original (ver "Bugs a corrigir" e
 """
 import json
 import os
+import sys
 
 import ee
 import geemap
@@ -20,11 +21,17 @@ import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 import osmnx as ox
+import pandas as pd
 import rasterio
+import tensorflow as tf
 from rasterio import features
 from rasterio.warp import transform_bounds
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import classification_report
+from sklearn.metrics import (
+    classification_report, confusion_matrix, 
+    cohen_kappa_score, jaccard_score, f1_score
+)
+from sklearn.model_selection import StratifiedKFold
 from sklearn.preprocessing import StandardScaler
 from tensorflow.keras import layers, models
 
@@ -146,32 +153,148 @@ def extract_training_samples(feature_stack, labels, nodata_mask, n_samples_per_c
 
 
 def train_random_forest(X_train, y_train, X_test, y_test):
+    """Treinar Random Forest com hiperparâmetros otimizados."""
+    print("\n" + "="*80)
+    print("RANDOM FOREST - TREINO E AVALIAÇÃO")
+    print("="*80 + "\n")
+    
     rf = RandomForestClassifier(
-        n_estimators=300, max_depth=20, n_jobs=-1,
-        random_state=42, class_weight='balanced',
+        n_estimators=300,
+        max_depth=20,
+        min_samples_split=5,
+        min_samples_leaf=2,
+        max_features='sqrt',
+        n_jobs=-1,
+        random_state=42,
+        class_weight='balanced',
     )
+    
     rf.fit(X_train, y_train)
-    print(classification_report(y_test, rf.predict(X_test), target_names=CLASS_NAMES, zero_division=0))
+    y_pred = rf.predict(X_test)
+    
+    # Métricas detalhadas
+    from sklearn.metrics import f1_score, cohen_kappa_score
+    accuracy = (y_pred == y_test).mean()
+    f1_weighted = f1_score(y_test, y_pred, average='weighted', zero_division=0)
+    kappa = cohen_kappa_score(y_test, y_pred)
+    
+    print(f"Acurácia: {accuracy:.4f}")
+    print(f"F1-Score (ponderado): {f1_weighted:.4f}")
+    print(f"Kappa: {kappa:.4f}")
+    print("\nRelatório de Classificação:")
+    print(classification_report(y_test, y_pred, target_names=CLASS_NAMES, zero_division=0))
+    
     return rf
 
 
+def train_xgboost(X_train, y_train, X_test, y_test):
+    """Treinar XGBoost (Gradient Boosting melhorado)."""
+    try:
+        from xgboost import XGBClassifier
+    except ImportError:
+        print("⚠️ XGBoost não instalado. Instalando...")
+        import subprocess
+        subprocess.run([sys.executable, "-m", "pip", "install", "xgboost"], check=False)
+        from xgboost import XGBClassifier
+    
+    print("\n" + "="*80)
+    print("XGBOOST - TREINO E AVALIAÇÃO")
+    print("="*80 + "\n")
+    
+    xgb = XGBClassifier(
+        n_estimators=200,
+        max_depth=8,
+        learning_rate=0.05,
+        subsample=0.8,
+        colsample_bytree=0.8,
+        random_state=42,
+        n_jobs=-1,
+        eval_metric='mlogloss'
+    )
+    
+    xgb.fit(
+        X_train, y_train,
+        eval_set=[(X_test, y_test)],
+        early_stopping_rounds=20,
+        verbose=False
+    )
+    
+    y_pred = xgb.predict(X_test)
+    
+    # Métricas detalhadas
+    from sklearn.metrics import f1_score, cohen_kappa_score
+    accuracy = (y_pred == y_test).mean()
+    f1_weighted = f1_score(y_test, y_pred, average='weighted', zero_division=0)
+    kappa = cohen_kappa_score(y_test, y_pred)
+    
+    print(f"Acurácia: {accuracy:.4f}")
+    print(f"F1-Score (ponderado): {f1_weighted:.4f}")
+    print(f"Kappa: {kappa:.4f}")
+    print("\nRelatório de Classificação:")
+    print(classification_report(y_test, y_pred, target_names=CLASS_NAMES, zero_division=0))
+    
+    return xgb
+
+
 def train_neural_network(X_train, y_train, X_test, y_test, n_classes=5):
+    """Treinar rede neural com melhores práticas."""
+    print("\n" + "="*80)
+    print("REDE NEURAL DENSA - TREINO E AVALIAÇÃO")
+    print("="*80 + "\n")
+    
     scaler = StandardScaler().fit(X_train)
     X_train_s, X_test_s = scaler.transform(X_train), scaler.transform(X_test)
 
     model = models.Sequential([
         layers.Input(shape=(X_train.shape[1],)),
+        layers.Dense(128, activation='relu'),
+        layers.BatchNormalization(),
+        layers.Dropout(0.4),
         layers.Dense(64, activation='relu'),
+        layers.BatchNormalization(),
         layers.Dropout(0.3),
         layers.Dense(32, activation='relu'),
-        layers.Dropout(0.3),
+        layers.Dropout(0.2),
         layers.Dense(n_classes, activation='softmax'),
     ])
-    model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-    model.fit(X_train_s, y_train, validation_split=0.15, epochs=30, batch_size=256, verbose=1)
+    
+    model.compile(
+        optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
+        loss='sparse_categorical_crossentropy',
+        metrics=['accuracy']
+    )
+    
+    # Early stopping e learning rate reduction
+    early_stop = tf.keras.callbacks.EarlyStopping(
+        monitor='val_loss', patience=10, restore_best_weights=True
+    )
+    reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(
+        monitor='val_loss', factor=0.5, patience=5, min_lr=1e-6
+    )
+    
+    model.fit(
+        X_train_s, y_train,
+        validation_split=0.15,
+        epochs=50,
+        batch_size=256,
+        callbacks=[early_stop, reduce_lr],
+        verbose=1
+    )
 
     y_pred = np.argmax(model.predict(X_test_s, verbose=0), axis=1)
+    
+    # Métricas detalhadas
+    from sklearn.metrics import f1_score, cohen_kappa_score
+    accuracy = (y_pred == y_test).mean()
+    f1_weighted = f1_score(y_test, y_pred, average='weighted', zero_division=0)
+    kappa = cohen_kappa_score(y_test, y_pred)
+    
+    print(f"\nAcurácia: {accuracy:.4f}")
+    print(f"F1-Score (ponderado): {f1_weighted:.4f}")
+    print(f"Kappa: {kappa:.4f}")
+    print("\nRelatório de Classificação:")
     print(classification_report(y_test, y_pred, target_names=CLASS_NAMES, zero_division=0))
+    
     return model, scaler
 
 
@@ -254,3 +377,159 @@ def plot_mask_overlay(feature_stack, classified, titulo='', alpha=0.5, salvar_em
         plt.show()
     else:
         plt.close(fig)
+
+
+# ============================================================
+# VALIDAÇÃO ROBUSTA E BALANCEAMENTO
+# ============================================================
+
+def apply_smote(X_train, y_train, random_state=42):
+    """Aplicar SMOTE para balancear classes (requer imbalanced-learn)."""
+    try:
+        from imblearn.over_sampling import SMOTE
+    except ImportError:
+        print("⚠️ imbalanced-learn não instalado. Instalando...")
+        import subprocess
+        subprocess.run([sys.executable, "-m", "pip", "install", "imbalanced-learn"], check=False)
+        from imblearn.over_sampling import SMOTE
+    
+    print("\n" + "="*80)
+    print("SMOTE - BALANCEAMENTO DE CLASSES")
+    print("="*80 + "\n")
+    
+    # Antes
+    unique, counts = np.unique(y_train, return_counts=True)
+    print("Distribuição ANTES do SMOTE:")
+    for cls, count in zip(unique, counts):
+        pct = 100 * count / len(y_train)
+        print(f"  {CLASS_NAMES[cls]:<20}: {count:>6} amostras ({pct:>5.1f}%)")
+    
+    # Aplicar SMOTE
+    smote = SMOTE(k_neighbors=5, random_state=random_state, n_jobs=-1)
+    X_balanced, y_balanced = smote.fit_resample(X_train, y_train)
+    
+    # Depois
+    unique, counts = np.unique(y_balanced, return_counts=True)
+    print("\nDistribuição DEPOIS do SMOTE:")
+    for cls, count in zip(unique, counts):
+        pct = 100 * count / len(y_balanced)
+        print(f"  {CLASS_NAMES[cls]:<20}: {count:>6} amostras ({pct:>5.1f}%)")
+    
+    print(f"\nAmostras adicionadas: {len(X_balanced) - len(X_train)}")
+    print()
+    
+    return X_balanced, y_balanced
+
+
+def train_with_kfold(model, X, y, n_splits=5, random_state=42):
+    """Treinar com K-Fold Cross-Validation para avaliação robusta."""
+    print("\n" + "="*80)
+    print(f"K-FOLD CROSS-VALIDATION ({n_splits} folds)")
+    print("="*80 + "\n")
+    
+    skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=random_state)
+    fold_results = []
+    trained_models = []
+    
+    for fold_idx, (train_idx, val_idx) in enumerate(skf.split(X, y)):
+        print(f"Fold {fold_idx + 1}/{n_splits}...", end=" ")
+        
+        X_train_fold, X_val_fold = X[train_idx], X[val_idx]
+        y_train_fold, y_val_fold = y[train_idx], y[val_idx]
+        
+        # Treinar
+        if hasattr(model, 'fit'):  # Verificar se é um modelo sklearn
+            model.fit(X_train_fold, y_train_fold)
+            y_pred = model.predict(X_val_fold)
+        else:
+            print("❌ Modelo não suportado")
+            continue
+        
+        # Calcular métricas
+        accuracy = (y_pred == y_val_fold).mean()
+        f1_w = f1_score(y_val_fold, y_pred, average='weighted', zero_division=0)
+        kappa = cohen_kappa_score(y_val_fold, y_pred)
+        jaccard = jaccard_score(y_val_fold, y_pred, average='weighted', zero_division=0)
+        
+        fold_results.append({
+            'fold': fold_idx + 1,
+            'accuracy': accuracy,
+            'f1_weighted': f1_w,
+            'kappa': kappa,
+            'jaccard': jaccard
+        })
+        trained_models.append(model)
+        
+        print(f"✓ Acc={accuracy:.4f}, F1={f1_w:.4f}")
+    
+    # Resumo
+    print("\n" + "="*80)
+    print("RESUMO DOS FOLDS")
+    print("="*80 + "\n")
+    
+    results_df = pd.DataFrame(fold_results)
+    print(f"Acurácia:     {results_df['accuracy'].mean():.4f} (±{results_df['accuracy'].std():.4f})")
+    print(f"F1 Ponderado: {results_df['f1_weighted'].mean():.4f} (±{results_df['f1_weighted'].std():.4f})")
+    print(f"Kappa:        {results_df['kappa'].mean():.4f} (±{results_df['kappa'].std():.4f})")
+    print(f"Jaccard (IoU):{results_df['jaccard'].mean():.4f} (±{results_df['jaccard'].std():.4f})")
+    print()
+    
+    return results_df, trained_models
+
+
+def plot_confusion_matrix(y_true, y_pred):
+    """Plotar matriz de confusão."""
+    cm = confusion_matrix(y_true, y_pred)
+    
+    fig, ax = plt.subplots(figsize=(10, 8))
+    im = ax.imshow(cm, interpolation='nearest', cmap='Blues')
+    
+    ax.figure.colorbar(im, ax=ax)
+    ax.set(xticks=np.arange(cm.shape[1]),
+           yticks=np.arange(cm.shape[0]),
+           xticklabels=CLASS_NAMES,
+           yticklabels=CLASS_NAMES,
+           xlabel='Predito',
+           ylabel='Verdadeiro')
+    
+    # Adicionar texto
+    fmt = 'd'
+    thresh = cm.max() / 2.
+    for i in range(cm.shape[0]):
+        for j in range(cm.shape[1]):
+            ax.text(j, i, format(cm[i, j], fmt),
+                   ha="center", va="center",
+                   color="white" if cm[i, j] > thresh else "black")
+    
+    fig.tight_layout()
+    plt.show()
+    
+    return cm
+
+
+def detailed_metrics_report(y_true, y_pred):
+    """Gerar relatório detalhado de métricas."""
+    print("\n" + "="*80)
+    print("RELATÓRIO DETALHADO DE CLASSIFICAÇÃO")
+    print("="*80 + "\n")
+    
+    print(classification_report(y_true, y_pred, target_names=CLASS_NAMES, zero_division=0))
+    
+    print("="*80)
+    print("MÉTRICAS ADICIONAIS")
+    print("="*80 + "\n")
+    
+    # Jaccard (IoU) por classe
+    jaccard_per_class = jaccard_score(y_true, y_pred, average=None, zero_division=0)
+    print("Jaccard Index (IoU) por classe:")
+    for cls, score in enumerate(jaccard_per_class):
+        print(f"  {CLASS_NAMES[cls]:<20}: {score:.4f}")
+    
+    print(f"\n  Média ponderada (mIoU): {jaccard_score(y_true, y_pred, average='weighted', zero_division=0):.4f}")
+    
+    # Cohen's Kappa
+    kappa = cohen_kappa_score(y_true, y_pred)
+    print(f"\nCohen's Kappa: {kappa:.4f}")
+    
+    # Matriz de confusão
+    plot_confusion_matrix(y_true, y_pred)
